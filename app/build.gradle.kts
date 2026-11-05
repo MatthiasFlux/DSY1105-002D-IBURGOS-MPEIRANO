@@ -55,6 +55,7 @@ dependencies {
     implementation ("androidx.camera:camera-video:${cameraxVersion}")
     implementation ("androidx.camera:camera-view:${cameraxVersion}")
     implementation ("androidx.camera:camera-extensions:${cameraxVersion}")
+    implementation ("androidx.compose.material:material-icons-extended:1.6.8")
 
     // Carga de imagenes (Coil para compose)
     implementation("io.coil-kt:coil-compose:2.6.0")
