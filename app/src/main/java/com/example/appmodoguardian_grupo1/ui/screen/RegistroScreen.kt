@@ -9,7 +9,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.appmodoguardian_grupo1.viewmodel.UsuarioViewModel
 
-// Definición de paleta de colores para el tema oscuro estilo INSERCODE
 private val DarkBg = Color(0xFF0B1220)
 private val CardBg = Color(0xFF131D31)
 private val InputBg = Color(0xFF1A263D)
@@ -39,7 +42,11 @@ fun RegistroScreen(
     viewModel: UsuarioViewModel
 ) {
     val estado by viewModel.estado.collectAsState()
+
     var mostrarClave by remember { mutableStateOf(false) }
+    var mostrarConfirmarClave by remember { mutableStateOf(false) }
+    var confirmarClave by remember { mutableStateOf("") }
+    var errorConfirmarClave by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
@@ -70,7 +77,7 @@ fun RegistroScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Lock,
-                        contentDescription = "Shield",
+                        contentDescription = "Escudo",
                         tint = Color.White
                     )
                 }
@@ -90,12 +97,12 @@ fun RegistroScreen(
                 }
             }
 
-            // Insignia "Acceso Seguro"
+            // Insignia "Registro Seguro"
             Box(
                 modifier = Modifier
-                    .clip(CapsuleShape)
+                    .clip(CircleShape)
                     .background(Color(0xFF1E293B))
-                    .border(1.dp, Color(0xFF334155), CapsuleShape)
+                    .border(1.dp, Color(0xFF334155), CircleShape)
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
                 Row(
@@ -119,7 +126,7 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Título principal
+            // Título
             Text(
                 text = "Crear Cuenta",
                 color = Color.White,
@@ -134,7 +141,7 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Campo: Nombre
+            // Campo: Nombre Completo
             OutlinedTextField(
                 value = estado.nombre,
                 onValueChange = viewModel::onNombreChange,
@@ -196,11 +203,7 @@ fun RegistroScreen(
                 },
                 trailingIcon = {
                     IconButton(onClick = { mostrarClave = !mostrarClave }) {
-                        Icon(
-                            imageVector = if (mostrarClave) Icons.Default.Info else Icons.Default.Lock,
-                            contentDescription = "Toggle password",
-                            tint = TextMuted
-                        )
+                        EyeIcon(visible = mostrarClave)
                     }
                 },
                 visualTransformation = if (mostrarClave) VisualTransformation.None else PasswordVisualTransformation(),
@@ -208,6 +211,41 @@ fun RegistroScreen(
                 supportingText = {
                     estado.errores.clave?.let {
                         Text(text = it, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = InputBg,
+                    unfocusedContainerColor = InputBg,
+                    focusedBorderColor = PrimaryBlue,
+                    unfocusedBorderColor = AccentBorder,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Campo: Confirmar Contraseña
+            OutlinedTextField(
+                value = confirmarClave,
+                onValueChange = {
+                    confirmarClave = it
+                    if (errorConfirmarClave.isNotEmpty()) errorConfirmarClave = ""
+                },
+                label = { Text("CONFIRMAR CONTRASEÑA", fontSize = 11.sp, color = TextMuted) },
+                leadingIcon = {
+                    Icon(Icons.Default.Lock, contentDescription = null, tint = TextMuted)
+                },
+                trailingIcon = {
+                    IconButton(onClick = { mostrarConfirmarClave = !mostrarConfirmarClave }) {
+                        EyeIcon(visible = mostrarConfirmarClave)
+                    }
+                },
+                visualTransformation = if (mostrarConfirmarClave) VisualTransformation.None else PasswordVisualTransformation(),
+                isError = errorConfirmarClave.isNotEmpty(),
+                supportingText = {
+                    if (errorConfirmarClave.isNotEmpty()) {
+                        Text(text = errorConfirmarClave, color = MaterialTheme.colorScheme.error)
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
@@ -248,7 +286,7 @@ fun RegistroScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Checkbox: Aceptar términos
+            // Checkbox Términos
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -268,10 +306,19 @@ fun RegistroScreen(
                 )
             }
 
-            // Botón Principal: Registrarse en el sistema
+            // Botón de Registro con validación
             Button(
                 onClick = {
-                    if (viewModel.validarFormulario()) {
+                    val esFormularioValido = viewModel.validarFormulario()
+                    val coincidenClaves = estado.clave == confirmarClave
+
+                    if (!coincidenClaves) {
+                        errorConfirmarClave = "Las contraseñas no coinciden"
+                    } else {
+                        errorConfirmarClave = ""
+                    }
+
+                    if (esFormularioValido && coincidenClaves) {
                         navController.navigate("resumen")
                     }
                 },
@@ -308,7 +355,9 @@ fun RegistroScreen(
             OutlinedButton(
                 onClick = { navController.popBackStack() },
                 shape = RoundedCornerShape(14.dp),
-                border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(AccentBorder)),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(AccentBorder)
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -318,7 +367,7 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Banner inferior de encriptación de seguridad
+            // Banner inferior
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -348,5 +397,3 @@ fun RegistroScreen(
         }
     }
 }
-
-private val CapsuleShape = CircleShape

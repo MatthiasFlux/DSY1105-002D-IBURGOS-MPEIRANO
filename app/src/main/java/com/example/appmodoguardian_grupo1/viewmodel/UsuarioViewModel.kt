@@ -76,4 +76,14 @@ class UsuarioViewModel : ViewModel() {
             null
         }
     }
+    fun iniciarSesionGoogleSimulado(onSuccess: () -> Unit) {
+        _estado.update { actual ->
+            actual.copy(
+                correo = "usuario.google@guardian.test",
+                nombre = "Usuario Google",
+                aceptaTerminos = true
+            )
+        }
+        onSuccess()
+    }
 }
