@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "688280313167",
+    "project_id": "appmodoguardiangrupo1",
+    "storage_bucket": "appmodoguardiangrupo1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:688280313167:android:93c7788b53dd138ca4f93a",
+        "android_client_info": {
+          "package_name": "com.example.appmodoguardian_grupo1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "688280313167-iarcr3e8buslpc3tleh2pm69krtqqh3g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.appmodoguardian_grupo1",
+            "certificate_hash": "7ec041a5625e2777092dc4f5d40576028b15391e"
+          }
+        },
+        {
+          "client_id": "688280313167-9elhed0sn8l35tdeh59glahecn563s8f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsk1U-WSIgJXA9ap21lMiJB96p3sGcIEg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "688280313167-9elhed0sn8l35tdeh59glahecn563s8f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

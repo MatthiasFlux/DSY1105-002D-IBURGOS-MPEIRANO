@@ -1,5 +1,8 @@
 package com.example.appmodoguardian_grupo1.ui.screen
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -18,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -39,10 +43,13 @@ fun LoginScreen(
     navController: NavController,
     viewModel: UsuarioViewModel
 ) {
+    val context = LocalContext.current
+
     var correoInput by remember { mutableStateOf("") }
     var claveInput by remember { mutableStateOf("") }
     var mensajeError by remember { mutableStateOf("") }
     var mostrarClave by remember { mutableStateOf(false) }
+    var cargandoGoogle by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -156,7 +163,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Campo Contraseña (usa el EyeIcon centralizado de CustomIcons.kt)
+            // Campo Contraseña
             OutlinedTextField(
                 value = claveInput,
                 onValueChange = { claveInput = it },
@@ -245,18 +252,36 @@ fun LoginScreen(
                 HorizontalDivider(modifier = Modifier.weight(1f), color = AccentBorder)
             }
 
-            // Botones Google y Apple (usan GoogleLogoIcon de CustomIcons.kt)
+            // Botones Google y Apple
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedButton(
+                    enabled = !cargandoGoogle,
                     onClick = {
-                        viewModel.iniciarSesionGoogleSimulado {
-                            navController.navigate("home") {
-                                popUpTo("log") { inclusive = true }
-                            }
+                        val activity = context.findActivity()
+                        if (activity == null) {
+                            mensajeError = "No se pudo obtener la actividad actual"
+                            return@OutlinedButton
                         }
+
+                        mensajeError = ""
+                        cargandoGoogle = true
+
+                        viewModel.iniciarSesionConGoogleWeb(
+                            activity = activity,
+                            onSuccess = {
+                                cargandoGoogle = false
+                                navController.navigate("home") {
+                                    popUpTo("log") { inclusive = true }
+                                }
+                            },
+                            onError = { error ->
+                                cargandoGoogle = false
+                                mensajeError = error
+                            }
+                        )
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(containerColor = InputBg),
@@ -267,22 +292,26 @@ fun LoginScreen(
                         .weight(1f)
                         .height(48.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        GoogleLogoIcon()
-                        Text(text = "Google", color = Color.White, fontWeight = FontWeight.Medium)
+                    if (cargandoGoogle) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            GoogleLogoIcon()
+                            Text(text = "Google", color = Color.White, fontWeight = FontWeight.Medium)
+                        }
                     }
                 }
 
                 OutlinedButton(
                     onClick = {
-                        viewModel.iniciarSesionGoogleSimulado {
-                            navController.navigate("home") {
-                                popUpTo("log") { inclusive = true }
-                            }
-                        }
+                        mensajeError = "Inicio con Apple no disponible en Android"
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(containerColor = InputBg),
@@ -348,4 +377,13 @@ fun LoginScreen(
             }
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is Activity) return currentContext
+        currentContext = currentContext.baseContext
+    }
+    return null
 }

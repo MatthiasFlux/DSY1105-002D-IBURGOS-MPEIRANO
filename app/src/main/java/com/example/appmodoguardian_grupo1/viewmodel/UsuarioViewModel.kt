@@ -1,23 +1,24 @@
 package com.example.appmodoguardian_grupo1.viewmodel
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import com.example.appmodoguardian_grupo1.model.Rol
-import com.example.appmodoguardian_grupo1.model.Usuario // <-- Import de tu modelo existente
+import com.example.appmodoguardian_grupo1.model.Usuario
 import com.example.appmodoguardian_grupo1.model.UsuarioErrores
 import com.example.appmodoguardian_grupo1.model.UsuarioUiState
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.OAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
 class UsuarioViewModel : ViewModel() {
 
-    // Estado interno mutable
-    private val _estado = MutableStateFlow(UsuarioUiState())
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    // Estado expuesto para la UI (inmutable)
+    private val _estado = MutableStateFlow(UsuarioUiState())
     val estado: StateFlow<UsuarioUiState> = _estado
 
-    // Lista fija usando el modelo importado de model/Usuario.kt
     private val usuariosPermitidos = listOf(
         Usuario("admin@guardian.test", "123456", Rol.ADMIN),
         Usuario("supervisor@guardian.test", "123456", Rol.SUPERVISOR),
@@ -76,14 +77,36 @@ class UsuarioViewModel : ViewModel() {
             null
         }
     }
-    fun iniciarSesionGoogleSimulado(onSuccess: () -> Unit) {
-        _estado.update { actual ->
-            actual.copy(
-                correo = "usuario.google@guardian.test",
-                nombre = "Usuario Google",
-                aceptaTerminos = true
-            )
-        }
-        onSuccess()
+
+    // Redirección web directa a Google mediante Firebase Auth
+    fun iniciarSesionConGoogleWeb(
+        activity: Activity,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val provider = OAuthProvider.newBuilder("google.com").apply {
+            addCustomParameter("prompt", "select_account")
+        }.build()
+
+        auth.startActivityForSignInWithProvider(activity, provider)
+            .addOnSuccessListener { authResult ->
+                val user = authResult.user
+                _estado.update { actual ->
+                    actual.copy(
+                        correo = user?.email.orEmpty(),
+                        nombre = user?.displayName ?: "Usuario Google",
+                        aceptaTerminos = true
+                    )
+                }
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+                onError(exception.localizedMessage ?: "No se pudo completar el inicio con Google")
+            }
+    }
+
+    fun cerrarSesion() {
+        auth.signOut()
+        _estado.value = UsuarioUiState()
     }
 }
