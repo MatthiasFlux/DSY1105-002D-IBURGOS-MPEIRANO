@@ -5,6 +5,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.appmodoguardian_grupo1.ui.screen.AlertasScreen
+import com.example.appmodoguardian_grupo1.ui.screen.CamarasScreen
+import com.example.appmodoguardian_grupo1.ui.screen.EventosScreen
 import com.example.appmodoguardian_grupo1.ui.screen.HomeScreen
 import com.example.appmodoguardian_grupo1.ui.screen.LogScreen
 import com.example.appmodoguardian_grupo1.ui.screen.LoginScreen
@@ -53,6 +56,24 @@ fun AppNavigation() {
             HomeScreen(
                 navController = navController,
                 viewModel = usuarioViewModel
+            )
+        }
+
+        composable(route = "camaras") {
+            CamarasScreen(
+                navController = navController
+            )
+        }
+
+        composable(route = "eventos") {
+            EventosScreen(
+                navController = navController
+            )
+        }
+
+        composable(route = "alertas") {
+            AlertasScreen(
+                navController = navController
             )
         }
 
