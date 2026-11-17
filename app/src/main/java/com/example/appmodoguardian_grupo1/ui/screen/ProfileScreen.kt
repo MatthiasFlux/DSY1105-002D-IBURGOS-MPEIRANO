@@ -1,6 +1,9 @@
 package com.example.appmodoguardian_grupo1.ui.screen
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -25,9 +28,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.appmodoguardian_grupo1.viewmodel.UsuarioViewModel
 
@@ -42,14 +47,31 @@ fun ProfileScreen(
     navController: NavController,
     viewModel: UsuarioViewModel
 ) {
+    val context = LocalContext.current
     val estado by viewModel.estado.collectAsState()
     var fotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
+    // 1. Launcher que abre la cámara y recibe la vista previa en Bitmap
     val launcherCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
         if (bitmap != null) {
             fotoBitmap = bitmap
+        }
+    }
+
+    // 2. Launcher que solicita el permiso CAMERA en tiempo de ejecución
+    val launcherPermisoCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { concedido ->
+        if (concedido) {
+            launcherCamara.launch(null)
+        } else {
+            Toast.makeText(
+                context,
+                "Debes permitir el acceso a la cámara para tomar una foto",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -207,9 +229,20 @@ fun ProfileScreen(
                     }
                 }
 
-                // Botón Abrir Cámara
+                // Botón Abrir Cámara con validación de permiso
                 Button(
-                    onClick = { launcherCamara.launch(null) },
+                    onClick = {
+                        val permisoConcedido = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (permisoConcedido) {
+                            launcherCamara.launch(null)
+                        } else {
+                            launcherPermisoCamara.launch(Manifest.permission.CAMERA)
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
