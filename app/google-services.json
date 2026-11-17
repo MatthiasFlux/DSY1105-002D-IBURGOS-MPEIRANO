@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "688280313167-osb178q4e89aff58s11nrmah62tbrde1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.appmodoguardian_grupo1",
+            "certificate_hash": "9122eb4005dbf809dada1cf6d64edb349170b8b1"
+          }
+        },
+        {
           "client_id": "688280313167-9elhed0sn8l35tdeh59glahecn563s8f.apps.googleusercontent.com",
           "client_type": 3
         }
