@@ -140,7 +140,6 @@ fun ResumenScreen(
                     HorizontalDivider(color = AccentBorder.copy(alpha = 0.5f))
                     DatoItem(label = "CORREO ELECTRÓNICO", valor = estado.correo.ifBlank { "No especificado" })
                     HorizontalDivider(color = AccentBorder.copy(alpha = 0.5f))
-                    DatoItem(label = "DIRECCIÓN DE DOMICILIO", valor = estado.direccion.ifBlank { "No especificada" })
                     HorizontalDivider(color = AccentBorder.copy(alpha = 0.5f))
                     DatoItem(label = "CONTRASEÑA", valor = "•".repeat(estado.clave.length.coerceAtLeast(6)))
                     HorizontalDivider(color = AccentBorder.copy(alpha = 0.5f))

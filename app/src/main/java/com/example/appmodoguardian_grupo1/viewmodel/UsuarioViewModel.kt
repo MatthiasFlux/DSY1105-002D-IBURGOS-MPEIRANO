@@ -37,10 +37,6 @@ class UsuarioViewModel : ViewModel() {
         _estado.update { it.copy(clave = valor, errores = it.errores.copy(clave = null)) }
     }
 
-    fun onDireccionChange(valor: String) {
-        _estado.update { it.copy(direccion = valor, errores = it.errores.copy(direccion = null)) }
-    }
-
     fun onAceptaTerminosChange(valor: Boolean) {
         _estado.update { it.copy(aceptaTerminos = valor) }
     }
@@ -50,15 +46,13 @@ class UsuarioViewModel : ViewModel() {
         val errores = UsuarioErrores(
             nombre = if (estadoActual.nombre.isBlank()) "Campo obligatorio" else null,
             correo = if (!estadoActual.correo.contains("@")) "Correo inválido" else null,
-            clave = if (estadoActual.clave.length < 6) "Debe tener al menos 6 caracteres" else null,
-            direccion = if (estadoActual.direccion.isBlank()) "Campo obligatorio" else null
+            clave = if (estadoActual.clave.length < 6) "Debe tener al menos 6 caracteres" else null
         )
 
         val hayErrores = listOfNotNull(
             errores.nombre,
             errores.correo,
-            errores.clave,
-            errores.direccion
+            errores.clave
         ).isNotEmpty()
 
         _estado.update { it.copy(errores = errores) }
@@ -78,7 +72,6 @@ class UsuarioViewModel : ViewModel() {
         }
     }
 
-    // Redirección web directa a Google mediante Firebase Auth
     fun iniciarSesionConGoogleWeb(
         activity: Activity,
         onSuccess: () -> Unit,
