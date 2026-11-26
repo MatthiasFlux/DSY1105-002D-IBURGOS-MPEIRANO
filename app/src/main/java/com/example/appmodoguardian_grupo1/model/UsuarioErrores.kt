@@ -1,8 +1,6 @@
 package com.example.appmodoguardian_grupo1.model
 
-// Modelo que almacena posibles errores individuales del formulario
 data class UsuarioErrores(
-    val nombre: String? = null,
     val correo: String? = null,
     val clave: String? = null
 )

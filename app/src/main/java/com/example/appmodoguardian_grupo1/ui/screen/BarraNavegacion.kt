@@ -26,10 +26,24 @@ private data class ItemNavGuardian(
 )
 
 fun NavController.navegarPestanaGuardian(ruta: String) {
-    navigate(ruta) {
-        popUpTo("home") { saveState = true }
-        launchSingleTop = true
-        restoreState = true
+    if (ruta == "home") {
+        // Vuelve directo a "home" limpiando cualquier pantalla apilada encima
+        val volvioAHome = popBackStack("home", inclusive = false)
+        if (!volvioAHome) {
+            navigate("home") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    } else {
+        navigate(ruta) {
+            popUpTo("home") {
+                saveState = true
+                inclusive = false
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 }
 

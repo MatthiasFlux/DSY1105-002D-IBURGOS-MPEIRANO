@@ -17,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,6 +52,7 @@ fun RegistroScreen(
     var mostrarConfirmarClave by remember { mutableStateOf(false) }
     var confirmarClave by remember { mutableStateOf("") }
     var errorConfirmarClave by remember { mutableStateOf("") }
+    var errorTerminos by remember { mutableStateOf("") }
     var cargandoGoogle by remember { mutableStateOf(false) }
 
     Box(
@@ -148,32 +148,6 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Campo: Nombre Completo
-            OutlinedTextField(
-                value = estado.nombre,
-                onValueChange = viewModel::onNombreChange,
-                label = { Text("NOMBRE COMPLETO", fontSize = 11.sp, color = TextMuted) },
-                leadingIcon = {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = TextMuted)
-                },
-                isError = estado.errores.nombre != null,
-                supportingText = {
-                    estado.errores.nombre?.let {
-                        Text(text = it, color = MaterialTheme.colorScheme.error)
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = InputBg,
-                    unfocusedContainerColor = InputBg,
-                    focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = AccentBorder,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-
             // Campo: Correo Electrónico
             OutlinedTextField(
                 value = estado.correo,
@@ -267,46 +241,64 @@ fun RegistroScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Checkbox Términos
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Checkbox(
-                    checked = estado.aceptaTerminos,
-                    onCheckedChange = viewModel::onAceptaTerminosChange,
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = PrimaryBlue,
-                        uncheckedColor = TextMuted
+            // Checkbox Términos + mensaje de validación
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Checkbox(
+                        checked = estado.aceptaTerminos,
+                        onCheckedChange = { aceptado ->
+                            viewModel.onAceptaTerminosChange(aceptado)
+                            if (aceptado) errorTerminos = ""
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = PrimaryBlue,
+                            uncheckedColor = TextMuted
+                        )
                     )
-                )
-                Text(
-                    text = "Acepto los términos y condiciones de servicio",
-                    color = Color.White,
-                    fontSize = 13.sp
-                )
+                    Text(
+                        text = "Acepto los términos y condiciones de servicio",
+                        color = Color.White,
+                        fontSize = 13.sp
+                    )
+                }
+
+                if (errorTerminos.isNotEmpty()) {
+                    Text(
+                        text = errorTerminos,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 12.dp)
+                    )
+                }
             }
 
-            // Botón de Registro con validación
+            // Botón de Registro siempre disponible (valida términos al pulsar)
             Button(
                 onClick = {
                     val esFormularioValido = viewModel.validarFormulario()
                     val coincidenClaves = estado.clave == confirmarClave
 
-                    if (!coincidenClaves) {
-                        errorConfirmarClave = "Las contraseñas no coinciden"
+                    errorConfirmarClave = if (!coincidenClaves) {
+                        "Las contraseñas no coinciden"
                     } else {
-                        errorConfirmarClave = ""
+                        ""
                     }
 
-                    if (esFormularioValido && coincidenClaves) {
+                    errorTerminos = if (!estado.aceptaTerminos) {
+                        "Debes aceptar los términos y condiciones para registrarte"
+                    } else {
+                        ""
+                    }
+
+                    if (esFormularioValido && coincidenClaves && estado.aceptaTerminos) {
                         navController.navigate("resumen")
                     }
                 },
-                enabled = estado.aceptaTerminos,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryBlue,
-                    disabledContainerColor = Color(0xFF1E293B)
+                    containerColor = PrimaryBlue
                 ),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
@@ -349,15 +341,19 @@ fun RegistroScreen(
                 HorizontalDivider(modifier = Modifier.weight(1f), color = AccentBorder)
             }
 
-            // Botones Google y Apple (requieren aceptar términos)
+            // Botones Google y Apple siempre disponibles (validan términos al pulsar)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Botón Google con logo multicolor
                 OutlinedButton(
-                    enabled = estado.aceptaTerminos && !cargandoGoogle,
+                    enabled = !cargandoGoogle,
                     onClick = {
+                        if (!estado.aceptaTerminos) {
+                            errorTerminos = "Debes aceptar los términos y condiciones para registrarte"
+                            return@OutlinedButton
+                        }
+
                         val activity = context.findActivity()
                         if (activity == null) {
                             Toast.makeText(
@@ -382,14 +378,8 @@ fun RegistroScreen(
                         )
                     },
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = InputBg,
-                        disabledContainerColor = Color(0xFF1E293B)
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = if (estado.aceptaTerminos) AccentBorder else AccentBorder.copy(alpha = 0.4f)
-                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = InputBg),
+                    border = BorderStroke(1.dp, AccentBorder),
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
@@ -408,17 +398,20 @@ fun RegistroScreen(
                             GoogleLogoIcon()
                             Text(
                                 text = "Google",
-                                color = if (estado.aceptaTerminos) Color.White else TextMuted,
+                                color = Color.White,
                                 fontWeight = FontWeight.Medium
                             )
                         }
                     }
                 }
 
-                // Botón Apple
                 OutlinedButton(
-                    enabled = estado.aceptaTerminos,
                     onClick = {
+                        if (!estado.aceptaTerminos) {
+                            errorTerminos = "Debes aceptar los términos y condiciones para registrarte"
+                            return@OutlinedButton
+                        }
+
                         Toast.makeText(
                             context,
                             "Registro con Apple no disponible en Android",
@@ -426,14 +419,8 @@ fun RegistroScreen(
                         ).show()
                     },
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = InputBg,
-                        disabledContainerColor = Color(0xFF1E293B)
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = if (estado.aceptaTerminos) AccentBorder else AccentBorder.copy(alpha = 0.4f)
-                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = InputBg),
+                    border = BorderStroke(1.dp, AccentBorder),
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
@@ -444,12 +431,12 @@ fun RegistroScreen(
                     ) {
                         Text(
                             text = "",
-                            color = if (estado.aceptaTerminos) Color.White else TextMuted,
+                            color = Color.White,
                             fontSize = 18.sp
                         )
                         Text(
                             text = "Apple",
-                            color = if (estado.aceptaTerminos) Color.White else TextMuted,
+                            color = Color.White,
                             fontWeight = FontWeight.Medium
                         )
                     }
