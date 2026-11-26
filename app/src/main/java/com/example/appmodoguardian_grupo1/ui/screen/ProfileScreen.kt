@@ -64,7 +64,6 @@ fun ProfileScreen(
 
     val nombreMostrar = estado.nombre.ifBlank { "Guardián" }
     val correoMostrar = estado.correo.ifBlank { "guardian@modoguardian.cl" }
-    val direccionMostrar = estado.direccion.ifBlank { "Zona Sur • Sector Operativo" }
     val iniciales = nombreMostrar
         .split(" ")
         .filter { it.isNotBlank() }
@@ -373,7 +372,7 @@ fun ProfileScreen(
                 }
             }
 
-            // 4. Sección MI CUENTA (Esencial + datos del usuario)
+            // 4. Sección MI CUENTA (Sin dirección)
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = "MI CUENTA",
@@ -396,14 +395,6 @@ fun ProfileScreen(
                             subtitulo = null,
                             badgeTexto = "12",
                             onClick = { navController.navegarPestanaGuardian("camaras") }
-                        )
-                        HorizontalDivider(color = AccentBorder.copy(alpha = 0.6f))
-                        FilaOpcionCuenta(
-                            icono = Icons.Outlined.LocationOn,
-                            titulo = "Dirección registrada",
-                            subtitulo = direccionMostrar,
-                            badgeTexto = null,
-                            onClick = { /* Solo muestra visual */ }
                         )
                         HorizontalDivider(color = AccentBorder.copy(alpha = 0.6f))
                         FilaOpcionCuenta(
@@ -464,6 +455,7 @@ fun ProfileScreen(
             // 6. Botón Cerrar Sesión funcional
             OutlinedButton(
                 onClick = {
+                    viewModel.cerrarSesion()
                     navController.navigate("log") {
                         popUpTo(0) { inclusive = true }
                     }

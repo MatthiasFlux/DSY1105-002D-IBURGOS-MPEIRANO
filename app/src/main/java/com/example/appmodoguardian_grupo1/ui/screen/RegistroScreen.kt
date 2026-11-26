@@ -1,5 +1,10 @@
 package com.example.appmodoguardian_grupo1.ui.screen
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -11,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -20,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -41,12 +46,14 @@ fun RegistroScreen(
     navController: NavController,
     viewModel: UsuarioViewModel
 ) {
+    val context = LocalContext.current
     val estado by viewModel.estado.collectAsState()
 
     var mostrarClave by remember { mutableStateOf(false) }
     var mostrarConfirmarClave by remember { mutableStateOf(false) }
     var confirmarClave by remember { mutableStateOf("") }
     var errorConfirmarClave by remember { mutableStateOf("") }
+    var cargandoGoogle by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -260,32 +267,6 @@ fun RegistroScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Campo: Dirección
-            OutlinedTextField(
-                value = estado.direccion,
-                onValueChange = viewModel::onDireccionChange,
-                label = { Text("DIRECCIÓN DE DOMICILIO", fontSize = 11.sp, color = TextMuted) },
-                leadingIcon = {
-                    Icon(Icons.Default.Home, contentDescription = null, tint = TextMuted)
-                },
-                isError = estado.errores.direccion != null,
-                supportingText = {
-                    estado.errores.direccion?.let {
-                        Text(text = it, color = MaterialTheme.colorScheme.error)
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = InputBg,
-                    unfocusedContainerColor = InputBg,
-                    focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = AccentBorder,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-
             // Checkbox Términos
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -351,6 +332,130 @@ fun RegistroScreen(
                 }
             }
 
+            // Separador
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = AccentBorder)
+                Text(
+                    text = "  O REGISTRARSE CON  ",
+                    color = TextMuted,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = AccentBorder)
+            }
+
+            // Botones Google y Apple (requieren aceptar términos)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Botón Google con logo multicolor
+                OutlinedButton(
+                    enabled = estado.aceptaTerminos && !cargandoGoogle,
+                    onClick = {
+                        val activity = context.findActivity()
+                        if (activity == null) {
+                            Toast.makeText(
+                                context,
+                                "No se pudo obtener la actividad actual",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@OutlinedButton
+                        }
+
+                        cargandoGoogle = true
+                        viewModel.iniciarSesionConGoogleWeb(
+                            activity = activity,
+                            onSuccess = {
+                                cargandoGoogle = false
+                                navController.navigate("resumen")
+                            },
+                            onError = { error ->
+                                cargandoGoogle = false
+                                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = InputBg,
+                        disabledContainerColor = Color(0xFF1E293B)
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (estado.aceptaTerminos) AccentBorder else AccentBorder.copy(alpha = 0.4f)
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                ) {
+                    if (cargandoGoogle) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            GoogleLogoIcon()
+                            Text(
+                                text = "Google",
+                                color = if (estado.aceptaTerminos) Color.White else TextMuted,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
+                // Botón Apple
+                OutlinedButton(
+                    enabled = estado.aceptaTerminos,
+                    onClick = {
+                        Toast.makeText(
+                            context,
+                            "Registro con Apple no disponible en Android",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = InputBg,
+                        disabledContainerColor = Color(0xFF1E293B)
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (estado.aceptaTerminos) AccentBorder else AccentBorder.copy(alpha = 0.4f)
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "",
+                            color = if (estado.aceptaTerminos) Color.White else TextMuted,
+                            fontSize = 18.sp
+                        )
+                        Text(
+                            text = "Apple",
+                            color = if (estado.aceptaTerminos) Color.White else TextMuted,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
             // Botón Volver
             OutlinedButton(
                 onClick = { navController.popBackStack() },
@@ -396,4 +501,13 @@ fun RegistroScreen(
             }
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is Activity) return currentContext
+        currentContext = currentContext.baseContext
+    }
+    return null
 }
