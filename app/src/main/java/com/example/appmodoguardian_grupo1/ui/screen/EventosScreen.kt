@@ -409,7 +409,7 @@ fun EventosScreen(navController: NavController) {
                                 evento = evento,
                                 onClick = {
                                     if (evento.esCritica) {
-                                        navController.navigate("alertas")
+                                        navController.navegarPestanaGuardian("alertas")
                                     }
                                 }
                             )

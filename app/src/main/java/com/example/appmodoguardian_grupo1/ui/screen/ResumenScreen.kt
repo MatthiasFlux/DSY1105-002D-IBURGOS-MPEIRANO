@@ -136,10 +136,7 @@ fun ResumenScreen(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    DatoItem(label = "NOMBRE COMPLETO", valor = estado.nombre.ifBlank { "No especificado" })
-                    HorizontalDivider(color = AccentBorder.copy(alpha = 0.5f))
                     DatoItem(label = "CORREO ELECTRÓNICO", valor = estado.correo.ifBlank { "No especificado" })
-                    HorizontalDivider(color = AccentBorder.copy(alpha = 0.5f))
                     HorizontalDivider(color = AccentBorder.copy(alpha = 0.5f))
                     DatoItem(label = "CONTRASEÑA", valor = "•".repeat(estado.clave.length.coerceAtLeast(6)))
                     HorizontalDivider(color = AccentBorder.copy(alpha = 0.5f))
@@ -152,9 +149,14 @@ fun ResumenScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Botón Ir a Perfil
+            // Botón Ir a Perfil (establece "home" como base en la pila)
             Button(
-                onClick = { navController.navigate("perfil") },
+                onClick = {
+                    navController.navigate("home") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                    navController.navegarPestanaGuardian("perfil")
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
@@ -183,6 +185,7 @@ fun ResumenScreen(
             // Botón Volver al Inicio (Navega a "log" limpiando la pila)
             OutlinedButton(
                 onClick = {
+                    viewModel.cerrarSesion()
                     navController.navigate("log") {
                         popUpTo(0) { inclusive = true }
                     }

@@ -25,10 +25,6 @@ class UsuarioViewModel : ViewModel() {
         Usuario("operador@guardian.test", "123456", Rol.OPERADOR)
     )
 
-    fun onNombreChange(valor: String) {
-        _estado.update { it.copy(nombre = valor, errores = it.errores.copy(nombre = null)) }
-    }
-
     fun onCorreoChange(valor: String) {
         _estado.update { it.copy(correo = valor, errores = it.errores.copy(correo = null)) }
     }
@@ -44,13 +40,11 @@ class UsuarioViewModel : ViewModel() {
     fun validarFormulario(): Boolean {
         val estadoActual = _estado.value
         val errores = UsuarioErrores(
-            nombre = if (estadoActual.nombre.isBlank()) "Campo obligatorio" else null,
             correo = if (!estadoActual.correo.contains("@")) "Correo inválido" else null,
             clave = if (estadoActual.clave.length < 6) "Debe tener al menos 6 caracteres" else null
         )
 
         val hayErrores = listOfNotNull(
-            errores.nombre,
             errores.correo,
             errores.clave
         ).isNotEmpty()
@@ -87,7 +81,6 @@ class UsuarioViewModel : ViewModel() {
                 _estado.update { actual ->
                     actual.copy(
                         correo = user?.email.orEmpty(),
-                        nombre = user?.displayName ?: "Usuario Google",
                         aceptaTerminos = true
                     )
                 }

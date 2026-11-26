@@ -62,13 +62,14 @@ fun ProfileScreen(
     var notificacionesPush by remember { mutableStateOf(true) }
     var alertasCriticas by remember { mutableStateOf(true) }
 
-    val nombreMostrar = estado.nombre.ifBlank { "Guardián" }
     val correoMostrar = estado.correo.ifBlank { "guardian@modoguardian.cl" }
+    val nombreMostrar = correoMostrar
+        .substringBefore("@")
+        .replaceFirstChar { it.uppercase() }
+        .ifBlank { "Guardián" }
     val iniciales = nombreMostrar
-        .split(" ")
-        .filter { it.isNotBlank() }
         .take(2)
-        .joinToString("") { it.first().uppercase() }
+        .uppercase()
         .ifBlank { "MG" }
 
     val launcherCamara = rememberLauncherForActivityResult(
@@ -372,7 +373,7 @@ fun ProfileScreen(
                 }
             }
 
-            // 4. Sección MI CUENTA (Sin dirección)
+            // 4. Sección MI CUENTA
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = "MI CUENTA",

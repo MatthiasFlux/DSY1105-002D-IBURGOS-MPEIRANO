@@ -71,13 +71,14 @@ fun HomeScreen(
     viewModel: UsuarioViewModel
 ) {
     val estado by viewModel.estado.collectAsState()
-    val nombreMostrar = estado.nombre.ifBlank { "Guardián" }
     val correoMostrar = estado.correo.ifBlank { "invitado@guardian.test" }
+    val nombreMostrar = correoMostrar
+        .substringBefore("@")
+        .replaceFirstChar { it.uppercase() }
+        .ifBlank { "Guardián" }
     val iniciales = nombreMostrar
-        .split(" ")
-        .filter { it.isNotBlank() }
         .take(2)
-        .joinToString("") { it.first().uppercase() }
+        .uppercase()
         .ifBlank { "MG" }
 
     val camaraDestacada = CamaraMuestra(
@@ -777,9 +778,9 @@ fun HomeScreen(
                 )
             }
 
-            // 6. Botones funcionales existentes
+            // 6. Botones funcionales
             Button(
-                onClick = { navController.navigate("perfil") },
+                onClick = { navController.navegarPestanaGuardian("perfil") },
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
@@ -797,6 +798,7 @@ fun HomeScreen(
 
             OutlinedButton(
                 onClick = {
+                    viewModel.cerrarSesion()
                     navController.navigate("log") {
                         popUpTo(0) { inclusive = true }
                     }
